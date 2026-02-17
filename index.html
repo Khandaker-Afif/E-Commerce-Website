@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>SwiftCart | Premium Shopping</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.5rem; }
+        .hidden-view { display: none; }
+        .loading-overlay { background: rgba(255, 255, 255, 0.8); z-index: 100; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans flex flex-col min-h-screen">
+
+    <div id="loading-spinner" class="fixed inset-0 loading-overlay hidden flex items-center justify-center">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+
+    <nav class="navbar bg-white shadow-md sticky top-0 z-50 px-4 lg:px-20">
+        <div class="flex-1">
+            <a href="javascript:void(0)" onclick="showView('home')" class="text-2xl font-bold text-indigo-600">SwiftCart</a>
+        </div>
+        <div class="flex-none gap-2">
+            <ul class="menu menu-horizontal px-1 font-medium">
+                <li><a href="javascript:void(0)" onclick="showView('home')">Home</a></li>
+                <li><a href="javascript:void(0)" onclick="showView('products')">Products</a></li>
+                <li class="hidden md:block"><a>About</a></li>
+                <li class="hidden md:block"><a>Contact</a></li>
+            </ul>
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle">
+                    <div class="indicator">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        <span id="cart-count" class="badge badge-sm indicator-item badge-primary">0</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <div id="home-view">
+        <header class="hero min-h-[450px]" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');">
+            <div class="hero-overlay bg-black bg-opacity-60"></div>
+            <div class="hero-content text-center text-neutral-content">
+                <div class="max-w-md">
+                    <h1 class="mb-5 text-5xl font-bold text-white">Best Collection For You</h1>
+                    <p class="mb-5 text-white">Discover the latest trends in fashion, electronics, and more. Shop with confidence and style at SwiftCart.</p>
+                    <button onclick="showView('products')" class="btn btn-primary px-8">Shop Now</button>
+                </div>
+            </div>
+        </header>
+
+        <section class="py-12 bg-white text-center">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold mb-2">Why Choose Us</h2>
+                <p class="text-gray-500 mb-10">We provide the best shopping experience with top-notch services.</p>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="p-6 bg-gray-50 rounded-xl">
+                        <div class="text-blue-600 text-3xl mb-4 flex justify-center">🚚</div>
+                        <h3 class="font-bold mb-2">Fast Delivery</h3>
+                        <p class="text-sm text-gray-500">Get your orders delivered to your doorstep quickly and efficiently.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-xl">
+                        <div class="text-blue-600 text-3xl mb-4 flex justify-center">🎧</div>
+                        <h3 class="font-bold mb-2">24/7 Support</h3>
+                        <p class="text-sm text-gray-500">Our support team is available around the clock to assist you.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-xl">
+                        <div class="text-blue-600 text-3xl mb-4 flex justify-center">🛡️</div>
+                        <h3 class="font-bold mb-2">Secure Payment</h3>
+                        <p class="text-sm text-gray-500">Experience safe and secure transactions with our encrypted systems.</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-xl">
+                        <div class="text-blue-600 text-3xl mb-4 flex justify-center">🔄</div>
+                        <h3 class="font-bold mb-2">Easy Returns</h3>
+                        <p class="text-sm text-gray-500">Not satisfied? Return your products easily within 30 days.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-12 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-10">Trending Now</h2>
+                <div id="trending-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+            </div>
+        </section>
+    </div>
+
+    <div id="products-view" class="hidden-view flex-grow">
+        <main class="container mx-auto px-4 py-16">
+            <h2 class="text-4xl font-bold text-center mb-4">Our Products</h2>
+            <div id="category-container" class="flex flex-wrap justify-center gap-3 mb-10"></div>
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"></div>
+        </main>
+    </div>
+
+    <footer class="bg-slate-900 text-white mt-auto pt-16 pb-8">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-gray-700 pb-10">
+            <div>
+                <h3 class="text-2xl font-bold text-indigo-600">SwiftCart</h3>
+                <p class="text-gray-400 text-sm mt-4">Your one-stop shop for all your fashion and lifestyle needs. Quality products, fast delivery, and excellent support.</p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-white text-lg">Quick Links</h4>
+                <ul class="text-gray-400 text-sm space-y-2">
+                    <li><a href="javascript:void(0)" onclick="showView('home')" class="hover:text-white transition">Home</a></li>
+                    <li><a href="javascript:void(0)" onclick="showView('products')" class="hover:text-white transition">Products</a></li>
+                    <li><a href="#" class="hover:text-white transition">About</a></li>
+                    <li><a href="#" class="hover:text-white transition">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4 text-white text-lg">Support</h4>
+                <ul class="text-gray-400 text-sm space-y-2">
+                    <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+                    <li><a href="#" class="hover:text-white transition">Shipping</a></li>
+                    <li><a href="#" class="hover:text-white transition">Returns</a></li>
+                    <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold mb-4 text-white uppercase tracking-wider">Subscribe to our newsletter</h4>
+                <p class="text-gray-400 text-sm mb-4">The latest news, articles, and resources sent to your inbox.</p>
+                <div class="join w-full">
+                    <input class="input input-bordered join-item w-full text-black bg-white" placeholder="Email"/>
+                    <button class="btn btn-primary join-item border-none">Subscribe</button>
+                </div>
+            </div>
+        </div>
+        <div class="container mx-auto px-4 mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-500 text-sm order-2 md:order-1">© 2026 SwiftCart, Inc. All rights reserved.</p>
+            <div class="flex gap-6 order-1 md:order-2">
+                <a href="#" class="text-gray-400 hover:text-white text-xl transition"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white text-xl transition"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white text-xl transition"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white text-xl transition"><i class="fa-brands fa-linkedin"></i></a>
+                <a href="#" class="text-gray-400 hover:text-white text-xl transition"><i class="fa-regular fa-envelope"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <input type="checkbox" id="details-modal" class="modal-toggle" />
+    <div class="modal" role="dialog">
+        <div id="modal-body" class="modal-box max-w-3xl bg-white">
+            </div>
+        <label class="modal-backdrop" for="details-modal">Close</label>
+    </div>
+
+   <script>
+    let cart = JSON.parse(localStorage.getItem('swiftCartItems')) || [];
+    let allProducts = [];
+
+    async function init() {
+        showLoader(true);
+        await fetchCategories();
+        await fetchInitialData();
+        updateCartUI();
+        showLoader(false);
+    }
+
+    function showView(viewName) {
+        const home = document.getElementById('home-view');
+        const products = document.getElementById('products-view');
+        if (viewName === 'home') {
+            home.classList.remove('hidden-view');
+            products.classList.add('hidden-view');
+        } else {
+            home.classList.add('hidden-view');
+            products.classList.remove('hidden-view');
+        }
+        window.scrollTo(0,0);
+    }
+
+    async function fetchCategories() {
+        try {
+            const res = await fetch('https://fakestoreapi.com/products/categories');
+            const categories = await res.json();
+            
+            // FIX: Using backticks inside the onclick and escaping them to handle apostrophes in "men's clothing"
+            document.getElementById('category-container').innerHTML = ['all', ...categories].map(cat => `
+                <button onclick="handleCategoryClick(\`${cat}\`)" class="btn btn-sm btn-outline btn-primary capitalize px-6 rounded-full">${cat}</button>
+            `).join('');
+            
+            updateActiveButton('all');
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    }
+
+    async function fetchInitialData() {
+        try {
+            const res = await fetch('https://fakestoreapi.com/products');
+            allProducts = await res.json();
+            renderProducts(allProducts.slice(0, 3), document.getElementById('trending-grid'));
+            renderProducts(allProducts, document.getElementById('product-grid'));
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        }
+    }
+
+    function renderProducts(products, targetContainer) {
+        if (!products.length) {
+            targetContainer.innerHTML = `<p class="text-center col-span-full py-10">No products found.</p>`;
+            return;
+        }
+        targetContainer.innerHTML = products.map(p => `
+            <div class="card bg-white shadow-lg border border-gray-100 h-full">
+                <figure class="p-6 h-48 bg-white"><img src="${p.image}" class="h-full object-contain" /></figure>
+                <div class="card-body p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase mb-1">${p.category}</div>
+                    <h2 class="card-title text-sm line-clamp-2 text-black">${p.title}</h2>
+                    <div class="flex justify-between items-center my-2">
+                        <span class="text-xl font-bold text-black">$${p.price}</span>
+                        <span class="text-yellow-500 text-sm">⭐ ${p.rating.rate}</span>
+                    </div>
+                    <div class="card-actions flex justify-between mt-4">
+                        <label onclick="showProductDetails(${p.id})" for="details-modal" class="btn btn-xs btn-outline cursor-pointer">Details</label>
+                        <button onclick="addToCart(${p.id})" class="btn btn-xs btn-primary">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function handleCategoryClick(category) {
+        updateActiveButton(category);
+        showLoader(true);
+        
+        
+        const url = category === 'all' 
+            ? 'https://fakestoreapi.com/products' 
+            : `https://fakestoreapi.com/products/category/${encodeURIComponent(category)}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            renderProducts(data, document.getElementById('product-grid'));
+        } catch (error) {
+            console.error("Error filtering category:", error);
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    function updateActiveButton(category) {
+        const buttons = document.querySelectorAll('#category-container button');
+        buttons.forEach(btn => {
+            if (btn.innerText.toLowerCase() === category.toLowerCase()) {
+                btn.classList.add('btn-active', 'btn-primary');
+                btn.classList.remove('btn-outline');
+            } else {
+                btn.classList.remove('btn-active', 'btn-primary');
+                btn.classList.add('btn-outline');
+            }
+        });
+    }
+
+    async function showProductDetails(id) {
+        showLoader(true);
+        try {
+            const res = await fetch(`https://fakestoreapi.com/products/${id}`);
+            const p = await res.json();
+            document.getElementById('modal-body').innerHTML = `
+                <div class="flex flex-col md:flex-row gap-8">
+                    <img src="${p.image}" class="w-full md:w-1/2 max-h-80 object-contain" />
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold mb-2 text-black">${p.title}</h2>
+                        <span class="badge badge-secondary mb-4">${p.category}</span>
+                        <p class="text-gray-600 mb-6 text-sm">${p.description}</p>
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="text-3xl font-bold text-indigo-600">$${p.price}</div>
+                            <div class="text-yellow-500">⭐ ${p.rating.rate} (${p.rating.count} reviews)</div>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="btn btn-primary w-full">Add to Cart</button>
+                    </div>
+                </div>`;
+        } catch (error) {
+            console.error("Error fetching product details:", error);
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    function addToCart(id) {
+       
+        const item = allProducts.find(p => p.id === id);
+        if (item) {
+            cart.push(item);
+            localStorage.setItem('swiftCartItems', JSON.stringify(cart));
+            updateCartUI();
+        }
+    }
+
+    function updateCartUI() {
+        const countElement = document.getElementById('cart-count');
+        if (countElement) {
+            countElement.innerText = cart.length;
+        }
+    }
+
+    function showLoader(status) {
+        const loader = document.getElementById('loading-spinner');
+        if (loader) {
+            loader.classList.toggle('hidden', !status);
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
