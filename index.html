@@ -41,7 +41,7 @@
         </div>
     </nav>
     <div id="home-view">
-        <header class="hero min-h-[450px]" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');">
+        <header class="hero min-h-[450px]" style="background-image: url(banner-image.png);">
             <div class="hero-overlay bg-black bg-opacity-60"></div>
             <div class="hero-content text-center text-neutral-content">
                 <div class="max-w-md">
@@ -148,5 +148,169 @@
             </div>
         <label class="modal-backdrop" for="details-modal">Close</label>
     </div>
+<script>
+    let cart = JSON.parse(localStorage.getItem('swiftCartItems')) || [];
+    let allProducts = [];
 
+    async function init() {
+        showLoader(true);
+        await fetchCategories();
+        await fetchInitialData();
+        updateCartUI();
+        showLoader(false);
+    }
+
+    function showView(viewName) {
+        const home = document.getElementById('home-view');
+        const products = document.getElementById('products-view');
+        if (viewName === 'home') {
+            home.classList.remove('hidden-view');
+            products.classList.add('hidden-view');
+        } else {
+            home.classList.add('hidden-view');
+            products.classList.remove('hidden-view');
+        }
+        window.scrollTo(0,0);
+    }
+
+    async function fetchCategories() {
+        try {
+            const res = await fetch('https://fakestoreapi.com/products/categories');
+            const categories = await res.json();
+            
+            // FIX: Using backticks inside the onclick and escaping them to handle apostrophes in "men's clothing"
+            document.getElementById('category-container').innerHTML = ['all', ...categories].map(cat => `
+                <button onclick="handleCategoryClick(\`${cat}\`)" class="btn btn-sm btn-outline btn-primary capitalize px-6 rounded-full">${cat}</button>
+            `).join('');
+            
+            updateActiveButton('all');
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    }
+
+    async function fetchInitialData() {
+        try {
+            const res = await fetch('https://fakestoreapi.com/products');
+            allProducts = await res.json();
+            renderProducts(allProducts.slice(0, 3), document.getElementById('trending-grid'));
+            renderProducts(allProducts, document.getElementById('product-grid'));
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        }
+    }
+
+    function renderProducts(products, targetContainer) {
+        if (!products.length) {
+            targetContainer.innerHTML = `<p class="text-center col-span-full py-10">No products found.</p>`;
+            return;
+        }
+        targetContainer.innerHTML = products.map(p => `
+            <div class="card bg-white shadow-lg border border-gray-100 h-full">
+                <figure class="p-6 h-48 bg-white"><img src="${p.image}" class="h-full object-contain" /></figure>
+                <div class="card-body p-5">
+                    <div class="text-xs font-semibold text-gray-400 uppercase mb-1">${p.category}</div>
+                    <h2 class="card-title text-sm line-clamp-2 text-black">${p.title}</h2>
+                    <div class="flex justify-between items-center my-2">
+                        <span class="text-xl font-bold text-black">$${p.price}</span>
+                        <span class="text-yellow-500 text-sm">⭐ ${p.rating.rate}</span>
+                    </div>
+                    <div class="card-actions flex justify-between mt-4">
+                        <label onclick="showProductDetails(${p.id})" for="details-modal" class="btn btn-xs btn-outline cursor-pointer">Details</label>
+                        <button onclick="addToCart(${p.id})" class="btn btn-xs btn-primary">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function handleCategoryClick(category) {
+        updateActiveButton(category);
+        showLoader(true);
+        
+        
+        const url = category === 'all' 
+            ? 'https://fakestoreapi.com/products' 
+            : `https://fakestoreapi.com/products/category/${encodeURIComponent(category)}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            renderProducts(data, document.getElementById('product-grid'));
+        } catch (error) {
+            console.error("Error filtering category:", error);
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    function updateActiveButton(category) {
+        const buttons = document.querySelectorAll('#category-container button');
+        buttons.forEach(btn => {
+            if (btn.innerText.toLowerCase() === category.toLowerCase()) {
+                btn.classList.add('btn-active', 'btn-primary');
+                btn.classList.remove('btn-outline');
+            } else {
+                btn.classList.remove('btn-active', 'btn-primary');
+                btn.classList.add('btn-outline');
+            }
+        });
+    }
+
+    async function showProductDetails(id) {
+        showLoader(true);
+        try {
+            const res = await fetch(`https://fakestoreapi.com/products/${id}`);
+            const p = await res.json();
+            document.getElementById('modal-body').innerHTML = `
+                <div class="flex flex-col md:flex-row gap-8">
+                    <img src="${p.image}" class="w-full md:w-1/2 max-h-80 object-contain" />
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold mb-2 text-black">${p.title}</h2>
+                        <span class="badge badge-secondary mb-4">${p.category}</span>
+                        <p class="text-gray-600 mb-6 text-sm">${p.description}</p>
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="text-3xl font-bold text-indigo-600">$${p.price}</div>
+                            <div class="text-yellow-500">⭐ ${p.rating.rate} (${p.rating.count} reviews)</div>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="btn btn-primary w-full">Add to Cart</button>
+                    </div>
+                </div>`;
+        } catch (error) {
+            console.error("Error fetching product details:", error);
+        } finally {
+            showLoader(false);
+        }
+    }
+
+    function addToCart(id) {
+       
+        const item = allProducts.find(p => p.id === id);
+        if (item) {
+            cart.push(item);
+            localStorage.setItem('swiftCartItems', JSON.stringify(cart));
+            updateCartUI();
+        }
+    }
+
+    function updateCartUI() {
+        const countElement = document.getElementById('cart-count');
+        if (countElement) {
+            countElement.innerText = cart.length;
+        }
+    }
+
+    function showLoader(status) {
+        const loader = document.getElementById('loading-spinner');
+        if (loader) {
+            loader.classList.toggle('hidden', !status);
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
+
+    
    
